@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<flow xmlns="http://www.springframework.org/schema/webflow"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ 	xsi:schemaLocation="http://www.springframework.org/schema/webflow
+ 						http://www.springframework.org/schema/webflow/spring-webflow-2.0.xsd">
+
+    <on-start>
+        <evaluate expression="appointmentFlowFacade.createCommandObject()" result="flowScope.appointment" />
+    </on-start>   
+                          
+	<view-state id="what" view="appointment/what" model="appointment">
+		<on-render>
+		    <evaluate expression="appointmentFlowFacade.getActiveTopics()" result="viewScope.topics" />
+		</on-render>
+		<transition on="next" to="where" validate="true" />
+		<transition on="cancel" to="end" validate="false"/>
+	</view-state>
+	
+	<view-state id="where" view="appointment/where" model="appointment">
+		<on-render>
+		    <evaluate expression="appointmentFlowFacade.searchLocation(appointment)" result="viewScope.locations" />
+		</on-render>
+		<transition on="search" to="where" validate="false" />
+		<transition on="back" to="what" validate="false" />
+		<transition on="next" to="when" validate="true" />
+		<transition on="cancel" to="end" validate="false"/>
+	</view-state>
+	
+	<view-state id="when" view="appointment/when" model="appointment">
+		<on-render>
+		    <evaluate expression="appointmentFlowFacade.buildTimeslots(appointment)" result="viewScope.timeslots" />
+		</on-render>
+		<transition on="back" to="where" validate="false" />
+		<transition on="next" to="assignEmployee" validate="true" />
+		<transition on="cancel" to="end" validate="false"/>
+	</view-state>
+	
+	<action-state id="assignEmployee">
+        <evaluate expression="appointmentFlowFacade.assignEmployee" />
+        <transition on="success" to="who" />
+        <transition on="error" to="when" />
+    </action-state>
+    
+    <view-state id="who" view="appointment/who" model="appointment">
+		<transition on="back" to="when" validate="false" />
+		<transition on="next" to="assignClient" validate="true" />
+		<transition on="cancel" to="end" validate="false"/>
+	</view-state>
+	
+	<action-state id="assignClient">
+        <evaluate expression="appointmentFlowFacade.assignClient" />
+        <transition on="success" to="confirm" />
+        <transition on="error" to="who" />
+    </action-state>
+    
+    <view-state id="confirm" view="appointment/confirm" model="appointment">
+		<transition on="back" to="who" validate="false" />
+		<transition on="next" to="confirmAppointment" validate="true" />
+		<transition on="cancel" to="end" validate="false"/>
+	</view-state>
+	
+	<action-state id="confirmAppointment">
+        <evaluate expression="appointmentFlowFacade.confirmAppointment" />
+        <transition on="success" to="end" />
+        <transition on="error" to="confirm" />
+    </action-state>
+    
+    <end-state id="end" view="externalRedirect:contextRelative:/home"/>
+</flow>
