@@ -6,6 +6,7 @@
 *.out
 
 ## maven and eclipse files to ignore
+.svn/
 .metadata/
 .classpath
 .project
